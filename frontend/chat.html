@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RAG Chat</title>
+<style>
+
+body{
+    font-family: Arial;
+    margin:0;
+}
+
+#chat{
+    height:90vh;
+    overflow-y:auto;
+    padding:20px;
+}
+
+.message{
+    margin:10px 0;
+}
+
+.user{
+    font-weight:bold;
+}
+
+.bot{
+    color:blue;
+}
+
+#input{
+    width:100%;
+    padding:10px;
+    font-size:16px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="chat"></div>
+
+<input id="input" placeholder="Ask something..." />
+
+<script>
+
+const session = Math.random().toString(36)
+
+const input = document.getElementById("input")
+const chat = document.getElementById("chat")
+
+input.addEventListener("keypress", e=>{
+    if(e.key==="Enter"){
+        send()
+    }
+})
+
+function add(text,cls){
+
+    const d=document.createElement("div")
+
+    d.className="message "+cls
+
+    d.textContent=text
+
+    chat.appendChild(d)
+
+    chat.scrollTop=chat.scrollHeight
+
+    return d
+}
+
+async function send(){
+
+    const q=input.value.trim()
+
+    if(!q) return
+
+    input.value=""
+
+    add("You: "+q,"user")
+
+    const bot=add("","bot")
+
+    const res=await fetch("/chat",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            session_id:session,
+            question:q
+        })
+    })
+
+    const reader=res.body.getReader()
+
+    const decoder=new TextDecoder()
+
+    let text=""
+
+    while(true){
+
+        const {done,value}=await reader.read()
+
+        if(done) break
+
+        text+=decoder.decode(value)
+
+        bot.textContent=text
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LPU Guide AI - Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+<div class="chat-area">
+
+<div class="welcome">
+<h1>Admin Dashboard</h1>
+<p>Manage LPU Guide AI</p>
+</div>
+
+<table id="docs-table" style="width:100%; margin-top:40px; border-collapse:collapse;">
+
+<thead>
+<tr>
+<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd;">Document</th>
+<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd;">Category</th>
+<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd;">Chunks</th>
+<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd;">Action</th>
+</tr>
+</thead>
+
+<tbody id="docs-body"></tbody>
+
+</table>
+
+</div>
+
+<div class="input-container">
+
+<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center">
+
+<input type="file" id="pdf-file">
+
+<button onclick="uploadPDF()">Upload PDF</button>
+
+<button onclick="loadDocuments()">Refresh Documents</button>
+
+<button onclick="showStats()">System Stats</button>
+
+<button onclick="deleteAll()">Delete All</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="/static/admin.js"></script>
+
+</body>
+</html>
