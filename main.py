@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Header, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,7 +49,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 
 # -------------------------------
-# Static Files (if frontend exists)
+# Static Files
 # -------------------------------
 
 if FRONTEND_DIR.exists():
@@ -66,30 +66,56 @@ def root():
 
 
 # -------------------------------
-# Admin Auth
+# Admin Authentication
 # -------------------------------
 
-def verify_admin(x_admin_key: str = Header(None)):
-    if x_admin_key != settings.ADMIN_API_KEY:
+def verify_admin(request: Request):
+    admin_key = request.headers.get("X-Admin-Key") or request.query_params.get("key")
+
+    if admin_key != settings.ADMIN_API_KEY:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
 
 # -------------------------------
-# Protected Docs
+# Protected Swagger Docs
 # -------------------------------
 
-@app.get("/docs", dependencies=[Depends(verify_admin)])
-def get_docs():
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="API Docs")
+@app.get("/docs")
+def get_docs(request: Request):
+    verify_admin(request)
+
+    key = request.query_params.get("key")
+
+    openapi_url = "/openapi.json"
+    if key:
+        openapi_url = f"/openapi.json?key={key}"
+
+    return get_swagger_ui_html(
+        openapi_url=openapi_url,
+        title="API Docs"
+    )
 
 
-@app.get("/redoc", dependencies=[Depends(verify_admin)])
-def get_redoc():
-    return get_redoc_html(openapi_url="/openapi.json", title="ReDoc")
+@app.get("/redoc")
+def get_redoc(request: Request):
+    verify_admin(request)
+
+    key = request.query_params.get("key")
+
+    openapi_url = "/openapi.json"
+    if key:
+        openapi_url = f"/openapi.json?key={key}"
+
+    return get_redoc_html(
+        openapi_url=openapi_url,
+        title="ReDoc"
+    )
 
 
-@app.get("/openapi.json", dependencies=[Depends(verify_admin)])
-def openapi():
+@app.get("/openapi.json")
+def openapi(request: Request):
+    verify_admin(request)
+
     return get_openapi(
         title=app.title,
         version=app.version,
@@ -112,14 +138,16 @@ def serve_chat():
 
 
 # -------------------------------
-# Admin Dashboard UI
+# Protected Admin Dashboard
 # -------------------------------
 
 @app.get("/admin.html")
-def serve_admin():
+def serve_admin(request: Request):
+    verify_admin(request)
+
     file_path = FRONTEND_DIR / "admin.html"
 
     if file_path.exists():
         return FileResponse(file_path)
 
-    return {"message": "Admin UI not found."}
+    return {"message": "Admin UI not found"}
