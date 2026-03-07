@@ -1,10 +1,27 @@
 import uuid
+import nltk
 from nltk.tokenize import sent_tokenize
 
 from app.services.embedding_service import get_embeddings
 from app.core.qdrant_client import client
 from app.core.constants import COLLECTION_NAME
 
+
+# -------------------------------
+# Ensure NLTK tokenizer exists
+# (Fix for Render deployment)
+# -------------------------------
+
+for pkg in ["punkt", "punkt_tab"]:
+    try:
+        nltk.data.find(f"tokenizers/{pkg}")
+    except LookupError:
+        nltk.download(pkg)
+
+
+# -------------------------------
+# Chunking Function
+# -------------------------------
 
 def chunk_text(
     text: str,
@@ -59,6 +76,10 @@ def chunk_text(
 
     return chunks
 
+
+# -------------------------------
+# Upload Text to Vector DB
+# -------------------------------
 
 def upload_text(
     text: str,
