@@ -31,7 +31,7 @@ router = APIRouter()
 
 @router.get("/health")
 def health_check():
-    return {"status": "HELLO YASHVANTH 🔥"}
+    return {"status": "Backend has started .."}
 
 
 # -------------------------
