@@ -157,7 +157,6 @@ def answer_question(question: str, history: list):
 
         yield source_text
 
-        save_history(session_id, question, full_answer)
 
     return stream_response()
 
