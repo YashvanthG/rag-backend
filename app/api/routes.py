@@ -59,7 +59,11 @@ def chat(req: ChatRequest):
             question=req.question,
             history=req.history
         )
+        if generator is None:
+            def fallback():
+                yield "Server error."
 
+            generator = fallback()
         return StreamingResponse(generator, media_type="text/plain")
 
     except Exception as e:

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UploadRequest(BaseModel):
@@ -9,10 +9,10 @@ class UploadResponse(BaseModel):
     message: str
 
 
+
 class ChatRequest(BaseModel):
     question: str
-    history: list = []
-
+    history: list = Field(default_factory=list)
 
 class ChatResponse(BaseModel):
     answer: str

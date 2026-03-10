@@ -49,7 +49,8 @@ def keyword_search(query: str):
 # ---------------------------
 
 def cohere_rerank(query: str, results):
-
+    if not results:
+        return results
     documents = [r.payload["text"] for r in results]
 
     response = co.rerank(
