@@ -2,7 +2,6 @@ from app.services.embedding_service import get_embedding
 from app.core.qdrant_client import client
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 from app.services.llm_service import generate_answer, generate_rewrite
-from app.services.memory_service import get_history, save_history
 from app.services.retrieval_service import retrieve_chunks
 from app.core.constants import (
     COLLECTION_NAME,
@@ -67,9 +66,8 @@ Return only the queries, one per line.
 
     return queries
 
-def answer_question(session_id: str, question: str):
+def answer_question(question: str, history: list):
 
-    history = get_history(session_id)
 
     # -------- GENERATE SEARCH QUERIES --------
     queries = rewrite_query(question, history)
@@ -101,7 +99,6 @@ def answer_question(session_id: str, question: str):
 
             yield answer
 
-            save_history(session_id, question, answer)
 
         return chat_stream()
 

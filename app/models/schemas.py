@@ -10,8 +10,8 @@ class UploadResponse(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    session_id: str
     question: str
+    history: list = []
 
 
 class ChatResponse(BaseModel):

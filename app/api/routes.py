@@ -55,30 +55,22 @@ def chat(req: ChatRequest):
 
     try:
 
-        generator = answer_question(req.session_id, req.question)
-
-        return StreamingResponse(
-            generator,
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive"
-            }
+        generator = answer_question(
+            question=req.question,
+            history=req.history
         )
+
+        return StreamingResponse(generator, media_type="text/plain")
 
     except Exception as e:
 
-        print("STREAM ERROR:", e)
+        print("CHAT ERROR:", e)
 
         def error_stream():
-            yield "Server error. 1234"
+            yield "Server error."
 
-        return StreamingResponse(
-            error_stream(),
-            media_type="text/event-stream"
-        )
-
-
+        return StreamingResponse(error_stream(), media_type="text/plain")
+    
 # -------------------------
 # Delete Specific Document
 # -------------------------
