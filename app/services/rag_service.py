@@ -18,7 +18,7 @@ def rewrite_query(question: str, history: list):
 
     history_text = ""
     for msg in recent_history:
-        history_text += f"{msg['role']}: {msg['content']}\n"
+        history_text += f"{msg.role}: {msg.content}\n"
 
     prompt = f"""
 You generate search queries for a document retrieval system.

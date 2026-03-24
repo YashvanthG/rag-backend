@@ -45,8 +45,18 @@ Response Style:
     ]
 
     # -------- ADD RECENT HISTORY --------
+    # -------- ADD RECENT HISTORY --------
     for msg in history[-7:]:
-        messages.append(msg)
+        role = msg.role.strip().lower()
+
+        # enforce valid roles
+        if role not in ["user", "assistant", "system"]:
+            role = "user"
+
+        messages.append({
+            "role": role,
+            "content": msg.content
+        })
 
     # -------- ADD CONTEXT --------
     messages.append({

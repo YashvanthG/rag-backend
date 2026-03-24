@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +21,7 @@ app = FastAPI(
 
 
 # -------------------------------
-# CORS
+# CORS (keep open for now)
 # -------------------------------
 
 app.add_middleware(
@@ -57,16 +57,16 @@ if FRONTEND_DIR.exists():
 
 
 # -------------------------------
-# Root Health Endpoint
+# Root (Hidden)
 # -------------------------------
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
     return {"message": "RAG backend running"}
 
 
 # -------------------------------
-# Admin Authentication
+# Admin Auth (for docs + admin UI)
 # -------------------------------
 
 def verify_admin(request: Request):
@@ -80,7 +80,7 @@ def verify_admin(request: Request):
 # Protected Swagger Docs
 # -------------------------------
 
-@app.get("/docs")
+@app.get("/docs", include_in_schema=False)
 def get_docs(request: Request):
     verify_admin(request)
 
@@ -96,7 +96,7 @@ def get_docs(request: Request):
     )
 
 
-@app.get("/redoc")
+@app.get("/redoc", include_in_schema=False)
 def get_redoc(request: Request):
     verify_admin(request)
 
@@ -112,7 +112,7 @@ def get_redoc(request: Request):
     )
 
 
-@app.get("/openapi.json")
+@app.get("/openapi.json", include_in_schema=False)
 def openapi(request: Request):
     verify_admin(request)
 
@@ -124,10 +124,10 @@ def openapi(request: Request):
 
 
 # -------------------------------
-# Frontend Chat UI
+# Chat UI (Hidden)
 # -------------------------------
 
-@app.get("/chat")
+@app.get("/chat-ui", include_in_schema=False)
 def serve_chat():
     file_path = FRONTEND_DIR / "chat.html"
 
@@ -138,10 +138,10 @@ def serve_chat():
 
 
 # -------------------------------
-# Protected Admin Dashboard
+# Admin UI (Protected + Hidden)
 # -------------------------------
 
-@app.get("/admin.html")
+@app.get("/admin.html", include_in_schema=False)
 def serve_admin(request: Request):
     verify_admin(request)
 

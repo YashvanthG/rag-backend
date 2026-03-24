@@ -1,8 +1,8 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Depends
 from fastapi.responses import StreamingResponse
 import shutil
 import os
-
+from app.auth.dependencies import verify_api_key ,verify_admin_key
 from app.services.rag_service import (
     answer_question,
     list_documents,
@@ -22,52 +22,36 @@ from app.models.schemas import (
     RetrievalTestRequest
 )
 
+
+# -------------------------
+# Public Router
+# -------------------------
+
 router = APIRouter()
 
-
-# -------------------------
-# Health Check
-# -------------------------
 
 @router.get("/health")
 def health_check():
     return {"status": "Backend has started .."}
 
 
-# -------------------------
-# Upload Text
-# -------------------------
-
-@router.post("/upload", response_model=UploadResponse)
-def upload(doc: UploadRequest):
-
-    result = upload_text(doc.text)
-
-    return UploadResponse(message=result)
-
-
-# -------------------------
-# Chat (Streaming)
-# -------------------------
-
 @router.post("/chat")
-def chat(req: ChatRequest):
+def chat(req: ChatRequest, api_key: str = Depends(verify_api_key)):
 
     try:
-
+        print(f"[CHAT] Key={api_key} | Q={req.question}")
         generator = answer_question(
             question=req.question,
             history=req.history
         )
+
         if generator is None:
             def fallback():
                 yield "Server error."
-
             generator = fallback()
         return StreamingResponse(generator, media_type="text/plain")
 
     except Exception as e:
-
         print("CHAT ERROR:", e)
 
         def error_stream():
@@ -75,21 +59,30 @@ def chat(req: ChatRequest):
 
         return StreamingResponse(error_stream(), media_type="text/plain")
     
-# -------------------------
-# Delete Specific Document
-# -------------------------
-
-@router.delete("/admin/delete")
-def delete_document(req: DeleteRequest):
-
-    return {"message": delete_by_source(req.source)}
+    
 
 
 # -------------------------
-# Upload PDF
+# Admin Router (Protected)
 # -------------------------
 
-@router.post("/admin/upload-pdf")
+admin_router = APIRouter(
+    prefix="/admin",
+    dependencies=[Depends(verify_admin_key)]
+)
+
+
+# -------- Upload Text --------
+
+@admin_router.post("/upload", response_model=UploadResponse)
+def upload(doc: UploadRequest):
+    result = upload_text(doc.text)
+    return UploadResponse(message=result)
+
+
+# -------- Upload PDF --------
+
+@admin_router.post("/upload-pdf")
 def upload_pdf(file: UploadFile = File(...)):
 
     os.makedirs("temp", exist_ok=True)
@@ -112,33 +105,31 @@ def upload_pdf(file: UploadFile = File(...)):
     return {"message": result}
 
 
-# -------------------------
-# List Documents
-# -------------------------
+# -------- Delete Specific --------
 
-@router.get("/admin/documents")
-def get_documents():
-
-    return list_documents()
+@admin_router.delete("/delete")
+def delete_document(req: DeleteRequest):
+    return {"message": delete_by_source(req.source)}
 
 
-# -------------------------
-# Delete All Documents
-# -------------------------
+# -------- Delete All --------
 
-@router.delete("/admin/delete-all")
+@admin_router.delete("/delete-all")
 def delete_all():
-
     return {"message": delete_all_documents()}
 
 
-# -------------------------
-# Stats
-# -------------------------
+# -------- List Documents --------
 
-@router.get("/admin/stats")
+@admin_router.get("/documents")
+def get_documents():
+    return list_documents()
+
+
+# -------- Stats --------
+
+@admin_router.get("/stats")
 def stats():
-
     docs = list_documents()
 
     total_chunks = sum(v["chunks"] for v in docs.values())
@@ -149,11 +140,9 @@ def stats():
     }
 
 
-# -------------------------
-# Retrieval Debug Endpoint
-# -------------------------
+# -------- Retrieval Debug --------
 
-@router.post("/admin/test-retrieval")
+@admin_router.post("/test-retrieval")
 def retrieval_test(req: RetrievalTestRequest):
 
     results = test_retrieval(req.query)
@@ -162,3 +151,10 @@ def retrieval_test(req: RetrievalTestRequest):
         "query": req.query,
         "results": results
     }
+
+
+# -------------------------
+# Attach Admin Router
+# -------------------------
+
+router.include_router(admin_router)
